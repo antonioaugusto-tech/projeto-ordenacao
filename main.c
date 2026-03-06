@@ -1,18 +1,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <string.h> 
-// Projeto: Benchmark de Algoritmos de Ordenação para Grandes Volumes de Dados
-// Objetivo: Analisar a eficiência entre O(n²) e O(n log n) em ambiente Windows
-// Autor: Antonio Augusto (Estudante de Ciência de Dados segundo periodo - PUC Minas)
+#include <stdbool.h>
 
-// Algoritmo Bubble Sort: Complexidade O(n²).
-//Realiza comparações sucessivas entre elementos vizinhos e trocas (swaps).
-//Embora simples, é ineficiente para Big Data devido ao crescimento quadrático do tempo de processamento em relação ao volume de dados.
+/** * VALIDACAO DE INTEGRIDADE:
+ * Em Data Science, a limpeza e validacao dos dados (Data Quality) e fundamental.
+ * Esta funcao garante que o algoritmo realmente entregou o dado ordenado antes da medicao.
+ */
+bool estaOrdenado(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        if (arr[i] > arr[i + 1]) return false;
+    }
+    return true;
+}
+
+/** * GERACAO DE MASSA DE DADOS (DATASET):
+ * Criamos um dataset sintetico de inteiros aleatorios para simular 
+ * cenarios reais de processamento de Big Data.
+ */
+void gerarDados(int arr[], int n) {
+    for (int i = 0; i < n; i++) {
+        arr[i] = rand() % 100000;
+    }
+}
+
+/** * CALLBACK DE COMPARACAO:
+ * Necessario para o algoritmo QuickSort nativo. Implementa a logica de precedencia
+ * para tipos de dados especificos (neste caso, inteiros).
+ */
+int comparar(const void *a, const void *b) {
+    return (*(int*)a - *(int*)b);
+}
+
+// BUBBLE SORT: Exemplo classico de algoritmo O(n^2). 
+// Ineficiente para grandes escalas devido ao crescimento quadratico do tempo.
 void bubbleSort(int arr[], int n) {
-    int i, j, temp;
-    for (i = 0; i < n - 1; i++) {
-        for (j = 0; j < n - i - 1; j++) {
+    int temp;
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
             if (arr[j] > arr[j + 1]) {
                 temp = arr[j];
                 arr[j] = arr[j + 1];
@@ -22,57 +47,77 @@ void bubbleSort(int arr[], int n) {
     }
 }
 
-//Função Callback para o QuickSort (qsort):
-//Utiliza ponteiros genéricos (void*) para garantir flexibilidade, realizando o 'typecasting' para inteiros. 
-//O retorno baseado na subtração (a - b) define a precedência dos elementos, resultando em uma ordenação crescente.
-int comparar(const void *a, const void *b) {
-    return (*(int*)a - *(int*)b);
-}
-
 int main() {
-    int n = 30000;
+    int n = 30000;          // Volume da amostra (Sample Size)
+    int repeticoes = 3;     // Amostragem estatistica para calculo de media
+    srand(time(NULL));      // Inicializacao da semente para aleatoriedade real
 
-    // Alocação dinâmica de memória no HEAP: 
-   // Essencial para lidar com grandes volumes de dados (Big Data) sem sobrecarregar a Stack do sistema.
+    // ALOCACAO NO HEAP:
+    // Pratica essencial em Engenharia de Dados para evitar o estouro da Stack (Stack Overflow)
+    // ao lidar com arrays massivos que nao caberiam na memoria de execucao rapida.
     int *dados1 = (int *)malloc(n * sizeof(int));
     int *dados2 = (int *)malloc(n * sizeof(int));
 
-    // Verificação de segurança: Garante que o sistema operacional concedeu o espaço na memória.
-    // Se o malloc retornar NULL, o programa encerra com erro para evitar falha de segmentação.
     if (dados1 == NULL || dados2 == NULL) {
-        printf("Erro: Memoria insuficiente no sistema.\n");
+        printf("Falha critica: Memoria insuficiente no sistema.\n");
         return 1;
     }
 
-    // Semente baseada no clock do sistema (time):
-   // Garante que a massa de dados seja diferente a cada execução, tornando o benchmark imparcial.
-    srand(time(NULL));
-    for (int i = 0; i < n; i++) {
-        int num = rand() % 100000;
-        dados1[i] = num;
-        dados2[i] = num; // Mantém a massa de dados idêntica para um benchmark justo entre os algoritmos.
+    double somaBubble = 0, somaQuick = 0;
+
+    printf("--- EXPERIMENTO CIENTIFICO DE PERFORMANCE ---\n");
+    printf("Amostra: %d elementos | Repeticoes: %d\n\n", n, repeticoes);
+
+    for (int r = 1; r <= repeticoes; r++) {
+        gerarDados(dados1, n);
+        // Garantimos que ambos os algoritmos enfrentem exatamente o mesmo desafio (Bias Control)
+        for(int i=0; i<n; i++) dados2[i] = dados1[i];
+
+        printf("Execucao %d: ", r);
+
+        // BENCHMARK BUBBLE SORT (Baseline Ineficiente)
+        clock_t inicio = clock();
+        bubbleSort(dados1, n);
+        clock_t fim = clock();
+        double tB = (double)(fim - inicio) / CLOCKS_PER_SEC;
+        somaBubble += tB;
+
+        // BENCHMARK QUICK SORT (Baseline Eficiente)
+        inicio = clock();
+        qsort(dados2, n, sizeof(int), comparar);
+        fim = clock();
+        double tQ = (double)(fim - inicio) / CLOCKS_PER_SEC;
+        somaQuick += tQ;
+
+        printf("Bubble: %.4fs | Quick: %.4fs\n", tB, tQ);
+        
+        // DATA VALIDATION: Verificacao de sucesso da operacao
+        if (!estaOrdenado(dados1, n) || !estaOrdenado(dados2, n)) {
+            printf("ERRO DE INTEGRIDADE: Dados nao ordenados.\n");
+            return 1;
+        }
     }
 
-    printf("--- DESAFIO DE PERFORMANCE ---\n");
-    printf("Processando %d elementos...\n\n", n);
+    // ANALISE ESTATISTICA: Calculo de Medias Aritmeticas
+    double mediaB = somaBubble / repeticoes;
+    double mediaQ = somaQuick / repeticoes;
 
-    // TESTE 1: BUBBLE SORT
-    // Captura o ciclo de clock atual do processador antes de iniciar a execução do algoritmo.
-    clock_t inicio = clock();
-    bubbleSort(dados1, n);
-    clock_t fim = clock();
-    double tempoBubble = (double)(fim - inicio) / CLOCKS_PER_SEC;
-    printf("1. Bubble Sort: %.4f segundos\n", tempoBubble);
+    printf("\n--- RESULTADO FINAL (MEDIAS ESTATISTICAS) ---\n");
+    printf("Media Bubble Sort: %.4f segundos\n", mediaB);
+    printf("Media Quick Sort:  %.4f segundos\n", mediaQ);
+    printf("Fator de Ganho: %.0fx de performance\n", mediaB / mediaQ);
 
-    // TESTE 2: QUICK SORT (Nativo)
-    inicio = clock();
-    qsort(dados2, n, sizeof(int), comparar);
-    fim = clock();
-    double tempoQuick = (double)(fim - inicio) / CLOCKS_PER_SEC;
-    printf("2. Quick Sort:  %.4f segundos\n", tempoQuick);
+    // PERSISTENCIA DE DADOS:
+    // Exportamos para CSV para que o Cientista possa analisar em Python (Pandas/Matplotlib)
+    FILE *f = fopen("resultados_benchmark.csv", "w");
+    fprintf(f, "Algoritmo,TempoMedio\n");
+    fprintf(f, "BubbleSort,%.4f\n", mediaB);
+    fprintf(f, "QuickSort,%.4f\n", mediaQ);
+    fclose(f);
 
-    printf("\nO Quick Sort foi %.0f vezes mais rapido!\n", tempoBubble / tempoQuick);
+    printf("\n[Output: resultados_benchmark.csv gerado com sucesso]\n");
 
+    // GESTAO DE RECURSOS: Libera memoria para evitar Memory Leaks
     free(dados1);
     free(dados2);
     return 0;
