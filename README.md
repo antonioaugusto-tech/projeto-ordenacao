@@ -1,34 +1,27 @@
-# Benchmark de Algoritmos de Ordenação: C vs C++
+# Benchmark de Performance: Análise Estatística de Algoritmos
 
-Este projeto realiza uma análise comparativa de performance entre algoritmos de ordenação clássicos, explorando as diferenças entre complexidades quadráticas $O(n^2)$ e logarítmicas $O(n \log n)$. O objetivo é demonstrar como a escolha do algoritmo e a gestão de memória impactam diretamente a eficiência em Ciência de Dados.
+Este projeto realiza uma análise comparativa entre algoritmos de ordenação ($O(n^2)$ vs $O(n \log n)$), aplicando rigor científico para medir o impacto da complexidade algorítmica no processamento de volumes massivos de dados.
 
-## Resultados do Benchmark
-Os testes foram executados num ambiente **Ambiente Windows (CPU i7)** processando uma massa de **30.000 elementos** gerados aleatoriamente.
+## Metodologia Experimental
+Diferente de testes simples, este benchmark utiliza:
+- **Aostragem Estatística:** Execução de múltiplas rodadas para cálculo de tempo médio, eliminando variações aleatórias do processador.
+- **Data Quality (Integridade):** Validação automática pós-processamento para garantir que o dataset foi ordenado corretamente.
+- **Engenharia de Memória:** Alocação dinâmica no **Heap** para simular manipulação de Big Data sem sobrecarga da Stack.
+- **Persistência de Dados:** Exportação automática dos resultados para arquivo `.csv` para análise em Python/Pandas.
 
-| Algoritmo | Linguagem | Complexidade | Tempo Médio |
-| :--- | :--- | :--- | :--- |
-| **Bubble Sort** | C | $O(n^2)$ | ~1.8720s |
-| **Quick Sort (Nativo)** | C | $O(n \log n)$ | ~0.0020s |
-| **std::sort (STL)** | C++ | $O(n \log n)$ | ~0.0020s |
+## Resultados Médios (n = 30.000)
+| Algoritmo | Complexidade | Tempo Médio |
+| :--- | :--- | :--- |
+| **Bubble Sort** | $O(n^2)$ | ~1.8700s |
+| **Quick Sort** | $O(n \log n)$ | ~0.0020s |
 
-> **Conclusão:** O Quick Sort demonstrou ser aproximadamente **936 vezes mais rápido** que o Bubble Sort para este volume de dados.
+**Conclusão:** O Quick Sort apresentou uma performance aproximadamente **900x superior**, validando a importância da escolha de estruturas de dados eficientes para escalabilidade.
 
-## Tecnologias e Conceitos Aplicados
+## Tecnologias e Ambiente
+- **Linguagem:** C (ISO C11)
+- **Compilador:** GCC (GNU Compiler Collection)
+- **Sistemas Operacionais:** macOS / Windows
+- **Ferramentas:** VS Code & Git
 
-### Linguagem C
-* **Alocação Dinâmica:** Uso de `malloc` e `free` para gestão manual de memória no Heap.
-* **Ponteiros:** Manipulação de endereços e uso de funções *callback* para o `qsort`.
-* **Arquitetura de Computadores:** Medição de ciclos de clock da CPU para análise de performance.
-
-### Linguagem C++
-* **STL (Standard Template Library):** Uso de containers dinâmicos (`std::vector`).
-* **Abstração:** Implementação de algoritmos otimizados (`std::sort`) com foco em produtividade e segurança de memória.
-
-## Estrutura do Repositório
-* `main.c`: Implementação em C com foco em manipulação de baixo nível.
-* `main.cpp`: Implementação em C++ utilizando recursos modernos da linguagem.
-
-## Autor
-**Antonio Augusto**
-Estudante de Ciência de Dados (2º Período) na **PUC Minas**.
-Interessado em Engenharia de Dados, Performance e Arquitetura de Sistemas.
+---
+**Autor:** Antonio Augusto - Estudante de Ciência de Dados (PUC Minas)
